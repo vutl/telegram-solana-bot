@@ -1,0 +1,85 @@
+DEBUG:asyncio:Using proactor: IocpProactor
+DEBUG:websockets.client:= connection is CONNECTING
+DEBUG:websockets.client:> GET /?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373 HTTP/1.1
+DEBUG:websockets.client:> Host: mainnet.helius-rpc.com
+DEBUG:websockets.client:> Upgrade: websocket
+DEBUG:websockets.client:> Connection: Upgrade
+DEBUG:websockets.client:> Sec-WebSocket-Key: 4UiYK48HNO8IQUvhRColBA==
+DEBUG:websockets.client:> Sec-WebSocket-Version: 13
+DEBUG:websockets.client:> Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+DEBUG:websockets.client:> User-Agent: Python/3.12 websockets/11.0.3
+DEBUG:websockets.client:< HTTP/1.1 101 Switching Protocols
+DEBUG:websockets.client:< Date: Thu, 29 Feb 2024 05:59:32 GMT
+DEBUG:websockets.client:< Connection: upgrade
+DEBUG:websockets.client:< Upgrade: websocket
+DEBUG:websockets.client:< Sec-WebSocket-Accept: BfE6EXIG7KiG2A9egAVwLRHlTS8=
+DEBUG:websockets.client:< CF-Ray: 85ceae828e8120dc-HKG
+DEBUG:websockets.client:< CF-Cache-Status: DYNAMIC
+DEBUG:websockets.client:< Cf-Placement: local-HKG
+DEBUG:websockets.client:< x-via: sg-32c-256gb-3
+DEBUG:websockets.client:< Server: cloudflare
+DEBUG:websockets.client:< alt-svc: h3=":443"; ma=86400
+DEBUG:websockets.client:= connection is OPEN
+DEBUG:websockets.client:> TEXT '{"method":"logsSubscribe","jsonrpc":"2.0","id":...mitment":"finalized"}]}' [149 bytes]
+DEBUG:websockets.client:< TEXT '{"jsonrpc":"2.0","result":2051481,"id":1}' [41 bytes]
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task cancelling name='Task-4' coro=<WebSocketCommonProtocol.close_connection() running at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\websockets\legacy\protocol.py:1312> wait_for=<Future pending cb=[shield.<locals>._outer_done_callback() at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:912, Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:757, shield.<locals>._inner_done_callback() at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:895]>
+ERROR:asyncio:Task was destroyed but it is pending!
+task: <Task cancelling name='Task-5' coro=<<async_generator_athrow without __name__>()> wait_for=<Future pending cb=[shield.<locals>._outer_done_callback() at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:912, Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\asyncio\tasks.py:757]>
+DEBUG:asyncio:Using proactor: IocpProactor
+DEBUG:websockets.client:= connection is CONNECTING
+DEBUG:websockets.client:> GET /?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373 HTTP/1.1
+DEBUG:websockets.client:> Host: mainnet.helius-rpc.com
+DEBUG:websockets.client:> Upgrade: websocket
+DEBUG:websockets.client:> Connection: Upgrade
+DEBUG:websockets.client:> Sec-WebSocket-Key: tbVOoWWCYWP7KS/sHEOBrg==
+DEBUG:websockets.client:> Sec-WebSocket-Version: 13
+DEBUG:websockets.client:> Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+DEBUG:websockets.client:> User-Agent: Python/3.12 websockets/11.0.3
+DEBUG:websockets.client:< HTTP/1.1 101 Switching Protocols
+DEBUG:websockets.client:< Date: Thu, 29 Feb 2024 06:03:37 GMT
+DEBUG:websockets.client:< Connection: upgrade
+DEBUG:websockets.client:< Upgrade: websocket
+DEBUG:websockets.client:< Sec-WebSocket-Accept: PebX3wjnV8V7JDhbGwNOq0IcRo4=
+DEBUG:websockets.client:< CF-Ray: 85ceb483183c5168-HKG
+DEBUG:websockets.client:< CF-Cache-Status: DYNAMIC
+DEBUG:websockets.client:< Cf-Placement: local-HKG
+DEBUG:websockets.client:< x-via: c3-sg-3
+DEBUG:websockets.client:< Server: cloudflare
+DEBUG:websockets.client:< alt-svc: h3=":443"; ma=86400
+DEBUG:websockets.client:= connection is OPEN
+DEBUG:websockets.client:> TEXT '{"method":"logsSubscribe","jsonrpc":"2.0","id":...mitment":"finalized"}]}' [149 bytes]
+DEBUG:websockets.client:< TEXT '{"jsonrpc":"2.0","result":1541595,"id":1}' [41 bytes]
+DEBUG:asyncio:Using proactor: IocpProactor
+DEBUG:websockets.client:= connection is CONNECTING
+DEBUG:websockets.client:> GET /?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373 HTTP/1.1
+DEBUG:websockets.client:> Host: mainnet.helius-rpc.com
+DEBUG:websockets.client:> Upgrade: websocket
+DEBUG:websockets.client:> Connection: Upgrade
+DEBUG:websockets.client:> Sec-WebSocket-Key: TGPhs/LFDPWcsl2/FpsjSA==
+DEBUG:websockets.client:> Sec-WebSocket-Version: 13
+DEBUG:websockets.client:> Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+DEBUG:websockets.client:> User-Agent: Python/3.12 websockets/11.0.3
+DEBUG:websockets.client:< HTTP/1.1 101 Switching Protocols
+DEBUG:websockets.client:< Date: Thu, 29 Feb 2024 06:23:23 GMT
+DEBUG:websockets.client:< Connection: upgrade
+DEBUG:websockets.client:< Upgrade: websocket
+DEBUG:websockets.client:< Sec-WebSocket-Accept: t52YAE8Y8coNNFHz2r6UjurTiYA=
+DEBUG:websockets.client:< CF-Ray: 85ced174a8cd0983-HKG
+DEBUG:websockets.client:< CF-Cache-Status: DYNAMIC
+DEBUG:websockets.client:< Cf-Placement: local-HKG
+DEBUG:websockets.client:< x-via: c3-sg-1
+DEBUG:websockets.client:< Server: cloudflare
+DEBUG:websockets.client:< alt-svc: h3=":443"; ma=86400
+DEBUG:websockets.client:= connection is OPEN
+DEBUG:websockets.client:> TEXT '{"method":"logsSubscribe","jsonrpc":"2.0","id":...mitment":"finalized"}]}' [149 bytes]
+DEBUG:websockets.client:< TEXT '{"jsonrpc":"2.0","result":3167960,"id":1}' [41 bytes]
+INFO:root:2VNoLqnT8QR5jDKCbiAsSr4kJmBeKqKMbnX6jaXt5Ax8DFkSoGtThBDBSPdq5e5pD22xu1BE7TGhkirjgNNzf1jY
+INFO:root:Program log: initialize2: InitializeInstruction2 { nonce: 254, open_time: 1709187845, init_pc_amount: 60000000000, init_coin_amount: 1450000000000000000 }
+INFO:root:i=0
+INFO:root:<generator object instructions_with_program_id.<locals>.<genexpr> at 0x000001C1F41EC380>
+INFO:root:find LP !!!
+INFO:root:
+ Token0: 2c3tGRxRUhBuhSLcFWH9HFcAnokFRRp92p8CdboRh45L, 
+ Token1: So11111111111111111111111111111111111111112, 
+ Pair: 2BRWrrRzyYwsxApSABLgK23pmbQG4R3A6jWonHArGSJs
