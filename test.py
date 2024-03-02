@@ -25,7 +25,6 @@ def getTokens(str_signature):
             print("============NEW POOL DETECTED====================")
             Token0 = instructions.accounts[8]
             Token1 = instructions.accounts[9]
-            # Your data
             data = {'Token_Index': ['Token0', 'Token1'],
                     'Account Public Key': [Token0, Token1]}
 
@@ -34,6 +33,7 @@ def getTokens(str_signature):
             print(table)
 
 
+#Set up WebSocket connection, chay getTokens khi pool moi duoc phat hien
 async def run():
     uri = "wss://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373"
     async with websockets.connect(uri) as websocket:
@@ -75,4 +75,5 @@ async def run():
 async def main():
     await run()
 
+#loop
 asyncio.run(main())
