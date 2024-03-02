@@ -37,7 +37,7 @@ def getTokens(str_signature):
 async def run():
     uri = "wss://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373"
     async with websockets.connect(uri) as websocket:
-        # Send subscription request
+        # gui subscription request
         await websocket.send(json.dumps({
             "jsonrpc": "2.0",
             "id": 1,
@@ -53,7 +53,6 @@ async def run():
         if 'result' in response_dict:
             print("Subscription successful. Subscription ID: ", response_dict['result'])
 
-        # Continuously read from the WebSocket
         async for response in websocket:
 
             response_dict = json.loads(response)
