@@ -23,10 +23,17 @@ def getTokens(str_signature):
     for instructions in instruction_list:
         if instructions.program_id == Pubkey.from_string(wallet_address):
             print("============NEW POOL DETECTED====================")
-            Token0 = instructions.accounts[8]
-            Token1 = instructions.accounts[9]
-            data = {'Token_Index': ['Token0', 'Token1'],
-                    'Account Public Key': [Token0, Token1]}
+            index = instructions.accounts[4]
+            index0 = instructions.accounts[8]
+            index1 = instructions.accounts[9]
+            index2 = instructions.accounts[7]
+            index8 = instructions.accounts[5]
+            index9 = instructions.accounts[6]
+            index10 = instructions.accounts[12]
+            index11 = instructions.accounts[10]
+            index12 = instructions.accounts[11]
+            data = {'Index': ['Id', 'baseMint', 'quoteMint', 'IpMint', 'authority', 'openOrders', 'targetOrders', 'baseVault', 'quoteVault'],
+                    'Info': [index, index0, index1, index2, index8, index9, index10, index11, index12]}
 
             df = pd.DataFrame(data)
             table = tabulate(df, headers='keys', tablefmt='fancy_grid')
