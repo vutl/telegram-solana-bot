@@ -3,6 +3,7 @@
 import asyncio
 import websockets
 import json
+import os
 from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 from solders.signature import Signature
@@ -60,12 +61,55 @@ def getTokens(str_signature):
             index15 = 4
             index16 = Pubkey.from_string("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX")
             index17 = instructions.accounts[16]
-            data = {'Index': ['Id', 'baseMint', 'quoteMint', 'IpMint', 'baseDecimals', 'quoteDecimals', 'IpDecimals', 'version', 'program_id', 'authority', 'openOrders', 'targetOrders', 'baseVault', 'quoteVault', 'withdrawQueue', 'IpVault', 'marketVersion', 'marketProgramId', 'marketId'],
-                    'Info': [index, index0, index1, index2, index3, index4, index5, index6, index7, index8, index9, index10, index11, index12, index13, index14, index15, index16, index17]}
+            # data = {'Index': ['Id', 'baseMint', 'quoteMint', 'IpMint', 'baseDecimals', 'quoteDecimals', 'IpDecimals', 'version', 'program_id', 'authority', 'openOrders', 'targetOrders', 'baseVault', 'quoteVault', 'withdrawQueue', 'IpVault', 'marketVersion', 'marketProgramId', 'marketId'],
+            #         'Info': [index, index0, index1, index2, index3, index4, index5, index6, index7, index8, index9, index10, index11, index12, index13, index14, index15, index16, index17]}
 
-            df = pd.DataFrame(data)
-            table = tabulate(df, headers='keys', tablefmt='fancy_grid')
-            print(table)
+            # df = pd.DataFrame(data)
+            # table = tabulate(df, headers='keys', tablefmt='fancy_grid')
+            # print(table)
+
+            # Dinh dang object
+            pool_data = {
+                 "Id": str(index),
+                "baseMint": str(index0),
+                "quoteMint": str(index1),
+                "IpMint": str(index2),
+                "baseDecimals": index3,
+                "quoteDecimals": index4,
+                "IpDecimals": index5,
+                "version": index6,
+                "program_id": str(index7),
+                "authority": str(index8),
+                "openOrders": str(index9),
+                "targetOrders": str(index10),
+                "baseVault": str(index11),
+                "quoteVault": str(index12),
+                "withdrawQueue": str(index13),
+                "IpVault": str(index14),
+                "marketVersion": index15,
+                "marketProgramId": str(index16),
+                "marketId": str(index17)
+            }
+
+            # Viet data vao file json token_address.json
+            file_name = "token_address.json"
+            if os.path.exists(file_name):
+                # Neu co file thi load data
+                with open(file_name, "r") as file:
+                    existing_data = json.load(file)
+                # Update data moi
+                existing_data.append(pool_data)
+                # Viet data vao file
+                with open(file_name, "w") as file:
+                    json.dump(existing_data, file, indent=4)
+            else:
+                # Neu ko co file thi tao file va viet data vao
+                with open(file_name, "w") as file:
+                    json.dump([pool_data], file, indent=4)
+
+            # In ra pool data
+            for key, value in pool_data.items():
+                print(f"{key}: {value}")
 
 
 #Set up WebSocket connection, chay getTokens khi pool moi duoc phat hien
