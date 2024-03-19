@@ -1,9 +1,6 @@
 from telethon.sync import TelegramClient
 from telethon import events
-
-api_id = '29398688'
-api_hash = '2eb07147c2fd51961182419fb7c19ead'
-bot_token = '7079490697:AAENOdhLs7PbvbugoLnANNvJthlzaw8beOc'
+from constants import api_id, api_hash, bot_token
 
 # Tao bot instance
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)

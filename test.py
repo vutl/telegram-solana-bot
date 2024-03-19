@@ -1,26 +1,57 @@
 "Detect  New Pools Created on Solana Raydium DEX"
 
+import solana
 import asyncio
-import websockets
+from solana.rpc.websocket_api import connect
+from solana.rpc.commitment import Finalized
+from solders.rpc.config import RpcTransactionLogsFilterMentions
 import json
 import os
+import datetime
+import re
 from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 from solders.signature import Signature
-import pandas as pd
-from tabulate import tabulate
+from construct import Bytes, Int64ul
+from construct import Struct as cStruct
 
-wallet_address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+from constants import wallet_address, solana_client, uri
+
+
+SERUM_MARKET_LAYOUT = cStruct(
+	'None' / Bytes(5),
+	'accountFlags' / Bytes(8),
+	'ownAddress' / Bytes(32),
+	'vaultSignerNonce' / Int64ul,
+	'baseMint' / Bytes(32),
+	'quoteMint' / Bytes(32),
+	'baseVault' / Bytes(32),
+	'baseDepositsTotal' / Int64ul,
+	'baseFeesAccrued' / Int64ul,
+	'quoteVault' / Bytes(32),
+	'quoteDepositsTotal' / Int64ul,
+	'quoteFeesAccrued' / Int64ul,
+	'quoteDustThreshold' / Int64ul,
+	'requestQueue' / Bytes(32),
+	'eventQueue' / Bytes(32),
+	'bids' / Bytes(32),
+	'asks' / Bytes(32), 
+	'baseLotSize' / Int64ul,
+	'quoteLotSize' / Int64ul,
+	'feeRateBps' / Int64ul,
+	'referrerRebatesAccrued' / Int64ul,
+	'dummy' / Bytes(7),
+	)
+
 seen_signatures = set()
-solana_client = Client("https://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373")
 
-def get_decimals(transaction, pubkey):
+def get_decimals(transaction, pubic_key):
 	try:
 		logs = transaction.transaction.meta.pre_token_balances
 	except AttributeError:
 		logs = [""]
 	for log in logs:
-		if log.mint == pubkey:
+		if log.mint == pubic_key:
 			return log.ui_token_amount.decimals
 
 	try:
@@ -28,10 +59,37 @@ def get_decimals(transaction, pubkey):
 	except AttributeError:
 		logs = [""]
 	for log in logs:
-		if log.mint == pubkey:
+		if log.mint == pubic_key:
 			return log.ui_token_amount.decimals
 	return None
 
+
+def get_market_authority(program_id, market_id):
+	seeds = [bytes(market_id)]
+	nonce = 0
+	public_key = Pubkey.default()
+	while nonce < 100:
+		try:
+			seeds_with_nonce = seeds + [bytes([nonce]) + bytes(7)]
+			public_key = Pubkey.create_program_address(seeds_with_nonce, program_id)
+		except:
+			nonce += 1
+			continue
+		return public_key
+
+def get_ido_open_time(transaction):
+	try:
+		logs = transaction.transaction.meta.log_messages
+	except AttributeError:
+		logs = [""]
+	for log in logs:
+		start = re.search("open_time:", log)		
+		if start != None:
+			end = re.search(", init_pc_amount:", log)
+			time_stamp = int(log[start.end()+1 : end.start()])
+			open_time = datetime.datetime.fromtimestamp(time_stamp)
+			return open_time, time_stamp 
+	return None, None
 
 def getTokens(str_signature):
     signature = Signature.from_string(str_signature)
@@ -61,13 +119,17 @@ def getTokens(str_signature):
             index15 = 4
             index16 = Pubkey.from_string("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX")
             index17 = instructions.accounts[16]
-            # data = {'Index': ['Id', 'baseMint', 'quoteMint', 'IpMint', 'baseDecimals', 'quoteDecimals', 'IpDecimals', 'version', 'program_id', 'authority', 'openOrders', 'targetOrders', 'baseVault', 'quoteVault', 'withdrawQueue', 'IpVault', 'marketVersion', 'marketProgramId', 'marketId'],
-            #         'Info': [index, index0, index1, index2, index3, index4, index5, index6, index7, index8, index9, index10, index11, index12, index13, index14, index15, index16, index17]}
-
-            # df = pd.DataFrame(data)
-            # table = tabulate(df, headers='keys', tablefmt='fancy_grid')
-            # print(table)
-
+            index18 = get_market_authority(index16, index17)
+            
+            serum_market_id_info = solana_client.get_account_info(index17)
+            serum_info = SERUM_MARKET_LAYOUT.parse(serum_market_id_info.value.data)
+            index19 = Pubkey.from_bytes(serum_info.baseVault)
+            index20 = Pubkey.from_bytes(serum_info.quoteVault)
+            index21 = Pubkey.from_bytes(serum_info.bids)
+            index22 = Pubkey.from_bytes(serum_info.asks)
+            index23 = Pubkey.from_bytes(serum_info.eventQueue)
+            index24 = get_ido_open_time(transaction)[1]
+              
             # Dinh dang object
             pool_data = {
                  "Id": str(index),
@@ -88,24 +150,25 @@ def getTokens(str_signature):
                 "IpVault": str(index14),
                 "marketVersion": index15,
                 "marketProgramId": str(index16),
-                "marketId": str(index17)
+                "marketId": str(index17),
+                "marketAuthority": str(index18),
+                "marketBaseVault": str(index19),
+                "marketQuoteVault": str(index20),
+                "marketBids": str(index21),
+                "marketAsks": str(index22),
+                "marketEventQueue": str(index23),
+				"openTime": index24,
             }
+			
+            # Tao thu muc neu ko co
+            active_pool_folder = 'active_pool'
+            if not os.path.exists(active_pool_folder):
+                os.makedirs(active_pool_folder)
 
-            # Viet data vao file json token_address.json
-            file_name = "token_address.json"
-            if os.path.exists(file_name):
-                # Neu co file thi load data
-                with open(file_name, "r") as file:
-                    existing_data = json.load(file)
-                # Update data moi
-                existing_data.append(pool_data)
-                # Viet data vao file
-                with open(file_name, "w") as file:
-                    json.dump(existing_data, file, indent=4)
-            else:
-                # Neu ko co file thi tao file va viet data vao
-                with open(file_name, "w") as file:
-                    json.dump([pool_data], file, indent=4)
+            # save vao file str_signature.json
+            json_file_path = os.path.join(active_pool_folder, f"{str_signature}.json")
+            with open(json_file_path, 'w') as json_file:
+                json.dump(pool_data, json_file, indent=4)
 
             # In ra pool data
             for key, value in pool_data.items():
@@ -114,41 +177,26 @@ def getTokens(str_signature):
 
 #Set up WebSocket connection, chay getTokens khi pool moi duoc phat hien
 async def run():
-    uri = "wss://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373"
-    async with websockets.connect(uri) as websocket:
+    async with connect(uri) as ws:
         # gui subscription request
-        await websocket.send(json.dumps({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "logsSubscribe",
-            "params": [
-                {"mentions": [wallet_address]},
-                {"commitment": "finalized"}
-            ]
-        }))
+        await ws.logs_subscribe(RpcTransactionLogsFilterMentions(Pubkey.from_string(wallet_address)), Finalized)
 
-        first_resp = await websocket.recv()
-        response_dict = json.loads(first_resp)
-        if 'result' in response_dict:
-            print("Subscription successful. Subscription ID: ", response_dict['result'])
-
-        async for response in websocket:
-
-            response_dict = json.loads(response)
-
-            if response_dict['params']['result']['value']['err'] == None:
-                signature = response_dict['params']['result']['value']['signature']
-
-                if signature not in seen_signatures:
-                    seen_signatures.add(signature)
-                    log_messages_set = set(response_dict['params']['result']['value']['logs'])
-
-                    search = "initialize2"
-                    if any(search in message for message in log_messages_set):
-                        print(f"True, https://solscan.io/tx/{signature}")
-                        getTokens(signature)
-            else:
-                pass
+        resp = await ws.recv()
+        print("\rSubscription successful | {}".format(datetime.datetime.now()),end="")
+        while True:     
+            resp = await ws.recv()
+            for tx in resp:
+                if tx.result.value.err == None:
+                    signature = str(tx.result.value.signature)
+                    logs = tx.result.value.logs
+                    if signature not in seen_signatures:
+                        seen_signatures.add(signature)
+                        log_messages_set = set(tx.result.value.logs)
+                        search = "initialize2"
+                        if any(search in message for message in log_messages_set):
+                            print("Time: {}".format(datetime.datetime.now()))
+                            print(f"Transaction link:  https://solscan.io/tx/{signature}")
+                            getTokens(signature)
 
 
 async def main():
