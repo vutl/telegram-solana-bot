@@ -169,6 +169,8 @@ async def run():
                             print("Time: {}".format(datetime.datetime.now()))
                             print(f"Transaction link:  https://solscan.io/tx/{signature}")
                             getTokens(signature)
+                
+                else: pass
 
 
 async def main():
