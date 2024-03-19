@@ -9,39 +9,11 @@ import json
 import os
 import datetime
 import re
-from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 from solders.signature import Signature
-from construct import Bytes, Int64ul
-from construct import Struct as cStruct
 
-from constants import wallet_address, solana_client, uri
+from constants import wallet_address, solana_client, uri, SERUM_MARKET_LAYOUT
 
-
-SERUM_MARKET_LAYOUT = cStruct(
-	'None' / Bytes(5),
-	'accountFlags' / Bytes(8),
-	'ownAddress' / Bytes(32),
-	'vaultSignerNonce' / Int64ul,
-	'baseMint' / Bytes(32),
-	'quoteMint' / Bytes(32),
-	'baseVault' / Bytes(32),
-	'baseDepositsTotal' / Int64ul,
-	'baseFeesAccrued' / Int64ul,
-	'quoteVault' / Bytes(32),
-	'quoteDepositsTotal' / Int64ul,
-	'quoteFeesAccrued' / Int64ul,
-	'quoteDustThreshold' / Int64ul,
-	'requestQueue' / Bytes(32),
-	'eventQueue' / Bytes(32),
-	'bids' / Bytes(32),
-	'asks' / Bytes(32), 
-	'baseLotSize' / Int64ul,
-	'quoteLotSize' / Int64ul,
-	'feeRateBps' / Int64ul,
-	'referrerRebatesAccrued' / Int64ul,
-	'dummy' / Bytes(7),
-	)
 
 seen_signatures = set()
 
