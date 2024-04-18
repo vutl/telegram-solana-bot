@@ -3,11 +3,17 @@ from construct import Bytes, Int64ul
 from construct import Struct as cStruct
 from solders.pubkey import Pubkey
 
-#for swap
+#for swap and create token
 WSOL = Pubkey.from_string("So11111111111111111111111111111111111111112")
 ASSOCIATED_TOKEN_PROGRAM_ID = Pubkey.from_string(
     "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 )
+
+SYSTEM_PROGRAM_ID = Pubkey.from_string('11111111111111111111111111111111')
+
+SYSTEM_RENT_ID = Pubkey.from_string('SysvarRent111111111111111111111111111111111')
+
+TOKEN_METADATA_PROGRAM_ID = Pubkey.from_string("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
 TOKEN_PROGRAM_ID: Pubkey = Pubkey.from_string(
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
@@ -23,7 +29,7 @@ SERUM_PROGRAM_ID = Pubkey.from_string('srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJt
 
 LAMPORTS_PER_SOL = 1000000000
 
-#for test.py
+#for pool_info.py
 wallet_address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
 solana_client = Client("https://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373")
 uri = "wss://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373"

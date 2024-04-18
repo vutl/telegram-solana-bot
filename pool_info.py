@@ -137,7 +137,7 @@ def getTokens(str_signature):
             if not os.path.exists(active_pool_folder):
                 os.makedirs(active_pool_folder)
 
-            # save vao file index0.json (baseMint)
+            # save vao file basemint.json
             json_file_path = os.path.join(active_pool_folder, f"{index0}.json")
             with open(json_file_path, 'w') as json_file:
                 json.dump(pool_data, json_file, indent=4)
