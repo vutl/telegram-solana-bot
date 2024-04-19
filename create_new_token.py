@@ -41,7 +41,6 @@ RPC_HTTPS_URL = config.get("RPC_URL", "https://mainnet.helius-rpc.com/?api-key=6
 
 ctx1 = Client(RPC_HTTPS_URL, commitment=Commitment("confirmed"), timeout=30,blockhash_cache=True)
 
-RPC_HTTPS_URL = config.get("RPC_URL", "rpc_url")
 secret_Key = config.get("WALLET", "private_key")
     
 #GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
