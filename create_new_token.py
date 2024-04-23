@@ -14,7 +14,7 @@ from solders.pubkey import Pubkey
 from solders.keypair import Keypair
 from solders.compute_budget import set_compute_unit_limit, set_compute_unit_price
 
-from fetch_pool_info import fetch_LP_info_for_token
+from pool_info import getTokens
 from layouts import SWAP_LAYOUT, POOL_INFO_LAYOUT
 from constants import SYSTEM_PROGRAM_ID, SYSTEM_RENT_ID, TOKEN_PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID, RAY_V4, SERUM_PROGRAM_ID, solana_client
 from configparser import ConfigParser
@@ -26,6 +26,7 @@ import json
 import requests
 import os
 import sys
+from construct import Bytes
 from borsh_construct import CStruct, String, U8, U16, U64, Vec, Option, Bool, Enum
 
 
@@ -41,7 +42,7 @@ RPC_HTTPS_URL = config.get("RPC_URL", "https://mainnet.helius-rpc.com/?api-key=6
 
 ctx1 = Client(RPC_HTTPS_URL, commitment=Commitment("confirmed"), timeout=30,blockhash_cache=True)
 
-secret_Key = config.get("WALLET", "private_key")
+secret_Key = config.get("WALLET", "3n7hbwHYCFhyiqwoLMQCTFLuzjknaVm2Q4HN8rnx9ztfTPVpXC2iiC1vXxMJX87sPuoG55R4TetRGCmYiXrzHctm")
     
 #GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
 GAS_PRICE = config.getint("FEE", "computeUnitPriceMicroLamports")
@@ -394,8 +395,8 @@ def sell_get_token_account(ctx,
 
 
 
-def fetch_pool_keys(mint, solana_rpc_client):
-	amm_info = fetch_LP_info_for_token(Pubkey.from_string(mint),solana_rpc_client)
+def fetch_pool_keys(mint):
+	amm_info = getTokens(Pubkey.from_string(mint))
 	return {
                     'amm_id': amm_info['id'],
                     'authority': amm_info['authority'],

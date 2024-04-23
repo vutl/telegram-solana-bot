@@ -1,18 +1,28 @@
 "Detect  New Pools Created on Solana Raydium DEX"
 
 import solana
+import solders
 import asyncio
 from solana.rpc.websocket_api import connect
-from solana.rpc.commitment import Finalized
+from solana.rpc.commitment import Finalized, Confirmed
 from solders.rpc.config import RpcTransactionLogsFilterMentions
+from solana.rpc.types import TokenAccountOpts
 import json
 import os
 import datetime
 import re
 from solders.pubkey import Pubkey
 from solders.signature import Signature
+from time import sleep, time
+from argparse import ArgumentParser
+from configparser import ConfigParser
+import struct
+from enum import IntEnum
+from construct import Bytes, Flag, Int8ul, Int64ul, BytesInteger, Sequence, Array
+from construct import Struct as cStruct
+import requests
 
-from constants import wallet_address, solana_client, uri, SERUM_MARKET_LAYOUT
+from constants import wallet_address, solana_client, uri, SERUM_MARKET_LAYOUT, RAY_AUTHORITY_V4, API_RAYDIUM_LIQUIDITY_POOL
 
 
 seen_signatures = set()
@@ -68,10 +78,10 @@ def getTokens(str_signature):
     transaction = solana_client.get_transaction(signature, encoding="jsonParsed",
                                                 max_supported_transaction_version=0).value
     instruction_list = transaction.transaction.transaction.message.instructions
-
+    # pool_info ={}
     for instructions in instruction_list:
         if instructions.program_id == Pubkey.from_string(wallet_address):
-            print("============NEW POOL DETECTED====================")
+            # print("============NEW POOL DETECTED====================")
             index = instructions.accounts[4]
             index0 = instructions.accounts[8]
             index1 = instructions.accounts[9]
@@ -101,7 +111,7 @@ def getTokens(str_signature):
             index22 = Pubkey.from_bytes(serum_info.asks)
             index23 = Pubkey.from_bytes(serum_info.eventQueue)
             index24 = get_ido_open_time(transaction)[1]
-              
+            
             # Dinh dang object
             pool_data = {
                  "Id": str(index),
@@ -131,21 +141,18 @@ def getTokens(str_signature):
                 "marketEventQueue": str(index23),
 				"openTime": index24,
             }
-			
+            
             # Tao thu muc neu ko co
             active_pool_folder = 'active_pool'
             if not os.path.exists(active_pool_folder):
                 os.makedirs(active_pool_folder)
 
             # save vao file basemint.json
-            json_file_path = os.path.join(active_pool_folder, f"{index0}.json")
+            json_file_path = os.path.join(active_pool_folder, f"{pool_data["baseMint"]}.json")
             with open(json_file_path, 'w') as json_file:
                 json.dump(pool_data, json_file, indent=4)
-
-            # In ra pool data
-            for key, value in pool_data.items():
-                print(f"{key}: {value}")
-
+				
+            return pool_data
 
 #Set up WebSocket connection, chay getTokens khi pool moi duoc phat hien
 async def run():
@@ -168,10 +175,12 @@ async def run():
                         if any(search in message for message in log_messages_set):
                             print("Time: {}".format(datetime.datetime.now()))
                             print(f"Transaction link:  https://solscan.io/tx/{signature}")
-                            getTokens(signature)
+                            pool_data = getTokens(signature)
+                            # In ra pool data
+                            for key, value in pool_data.items():
+                                print(f"{key}: {value}")
                 
                 else: pass
-
 
 async def main():
     await run()

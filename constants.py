@@ -30,6 +30,7 @@ SERUM_PROGRAM_ID = Pubkey.from_string('srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJt
 LAMPORTS_PER_SOL = 1000000000
 
 #for pool_info.py
+API_RAYDIUM_LIQUIDITY_POOL = "https://api.raydium.io/v2/sdk/liquidity/mainnet.json"
 wallet_address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
 solana_client = Client("https://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373")
 uri = "wss://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373"
