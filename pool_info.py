@@ -182,8 +182,8 @@ async def run():
                 
                 else: pass
 
-async def main():
-    await run()
+def main():
+    asyncio.run(run())
 
-#loop
-asyncio.run(main())
+if __name__ == "__main__":
+    main()

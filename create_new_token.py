@@ -18,7 +18,7 @@ from pool_info import getTokens
 from layouts import SWAP_LAYOUT, POOL_INFO_LAYOUT
 from constants import SYSTEM_PROGRAM_ID, SYSTEM_RENT_ID, TOKEN_PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID, RAY_V4, SERUM_PROGRAM_ID, solana_client
 from configparser import ConfigParser
-from time import time, sleep
+from time import sleep, time
 import base58
 import asyncio
 import datetime
@@ -38,11 +38,11 @@ config = ConfigParser()
 config.read('config.ini')
 
 # RPC settings 
-RPC_HTTPS_URL = config.get("RPC_URL", "https://mainnet.helius-rpc.com/?api-key=6dcb92e3-5222-4d11-9dc4-dbee6df8f373")
+RPC_HTTPS_URL = config.get("RPC_URL", "rpc_url")
 
 ctx1 = Client(RPC_HTTPS_URL, commitment=Commitment("confirmed"), timeout=30,blockhash_cache=True)
 
-secret_Key = config.get("WALLET", "3n7hbwHYCFhyiqwoLMQCTFLuzjknaVm2Q4HN8rnx9ztfTPVpXC2iiC1vXxMJX87sPuoG55R4TetRGCmYiXrzHctm")
+secret_Key = config.get("WALLET", "private_key")
     
 #GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
 GAS_PRICE = config.getint("FEE", "computeUnitPriceMicroLamports")
@@ -57,14 +57,14 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
         while txnBool:
             try:
                 #print("7. Execute Transaction...")
-                start_time = time.time()
+                start_time = time()
                 if Wsol_account_keyPair != None:
                     txn = await solana_client.send_transaction(swap_tx, payer, Wsol_account_keyPair)
                 else:
                     txn = await solana_client.send_transaction(swap_tx, *signers)
 
                 txid_string_sig = txn.value
-                node_proc_time = time.time()
+                node_proc_time = time()
                 print("\n[TXT] RPC NODE ĐÃ NHẬN LỆNH        | {}\n..... Chờ Mạng Lưới Xác Nhận".format(datetime.datetime.now()))
                 
                 checkTxn = True
@@ -74,8 +74,8 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
                         # FeesUsed = (status.value.transaction.meta.fee) / 1000000000
                         if status.value.transaction.meta.err == None:
                             # print(f"[TXN] Transaction Fees: {FeesUsed:.10f} SOL")
-                            finish_time = time.time()
-                            execution_time = time.time() - start_time
+                            finish_time = time()
+                            execution_time = time() - start_time
                             print("[INF] THÀNH CÔNG                    | {} |\n[INF] TX : {}".format(datetime.datetime.now(),txn.value))
                             print("[INF] Thời Gian Node Nhận Lệnh    : {} giây".format(node_proc_time - start_time))
                             print("[INF] Thời Gian Mạng Lưới Xác Thực: {} giây".format(finish_time - node_proc_time))
@@ -88,7 +88,7 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
                         
                         else:
                             print("[INF] THẤT BẠI")
-                            execution_time = time.time() - start_time
+                            execution_time = time() - start_time
                             print(f"Thời Gian: {execution_time} giây")
                             checkTxn = False
 
@@ -265,7 +265,7 @@ def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, pa
     if associated_token_account_Instructions != None:
         tx.add(associated_token_account_Instructions)
     tx.add(mint_to_account_Instructions)
-    print("[INF] MINTING TOken..........")
+    print("[INF] MINTING TOKEN..........")
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     txn = asyncio.run(execute_tx(tx, payer, None, signers))
     return mint
@@ -331,8 +331,6 @@ def make_simulate_pool_info_instruction(accounts, mint, ctx):
         return Instruction(RAY_V4, data, keys)
 
 
-
-
 def make_swap_instruction(amount_in: int, token_account_in: Pubkey.from_string, token_account_out: Pubkey.from_string,
                               accounts: dict, mint, ctx, owner) -> Instruction:
         
@@ -391,8 +389,6 @@ def sell_get_token_account(ctx,
     except:
         print("Mint Token Not found")
         return None
-
-
 
 
 def fetch_pool_keys(mint):
