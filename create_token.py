@@ -47,6 +47,12 @@ secret_Key = config.get("WALLET", "private_key")
 #GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
 GAS_PRICE = config.getint("FEE", "computeUnitPriceMicroLamports")
 
+
+def get_payer(pubkey):
+    payer = Keypair.from_bytes(base58.b58decode(pubkey))
+    return payer
+
+
 async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):    
     solana_client = AsyncClient(RPC_HTTPS_URL, commitment=Commitment("confirmed"), timeout=30, blockhash_cache=False)
         
@@ -120,8 +126,6 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
         print(e)
         print("Main Swap error Raydium... retrying...")
 
-
-#------------------name token------------------
 # structure of the instruction
 instruction_structure = CStruct(
     "instructionDiscriminator" / U8,
@@ -193,94 +197,74 @@ def metadata_account_instruction(token_name, symbol, uri, token, payer):
         }
     return Instruction(TOKEN_METADATA_PROGRAM_ID, instruction_structure.build(data), accounts)
 
-def name_token(token_name, symbol, uri, token, payer, GAS_PRICE):
-    print("[INF] CREATE NAME AND LOGO")
-    metadata_account_Instructions = metadata_account_instruction(token_name, symbol, uri, token, payer)
-    tx = Transaction(fee_payer = payer.pubkey()).add(set_compute_unit_price(GAS_PRICE)).add(metadata_account_Instructions)
-    signers = [payer]
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    txn = asyncio.run(execute_tx(tx, payer, None, signers))
-    return txn
-
-
-#------------------create token------------------
-def get_payer(pubkey):
-    payer = Keypair.from_bytes(base58.b58decode(pubkey))
-    return payer
 
 def create_mint(solana_client, payer, mint_authority, decimals, program_id, GAS_PRICE):
-    #mint = Token.create_mint(solana_client, payer, mint_authority, decimals, program_id, skip_confirmation=False)
     balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(solana_client)
     mint_keypair = Keypair()
     txn = Transaction(fee_payer=payer.pubkey()).add(set_compute_unit_price(GAS_PRICE))
     signers=[]
-    txn.add(
-            sp.create_account(
-                sp.CreateAccountParams(
-                    from_pubkey=payer.pubkey(),
-                    to_pubkey=mint_keypair.pubkey(),
-                    lamports=balance_needed,
-                    space=MINT_LAYOUT.sizeof(),
-                    owner=program_id,
-                )
-            )
-        )
-    txn.add(
-            spl_token.initialize_mint(
-                spl_token.InitializeMintParams(
+    txn.add(create_account_instructions(balance_needed, mint_keypair, payer, program_id))
+    txn.add(initialize_mint_instructions(mint_keypair, mint_authority, decimals, program_id))
+    return mint_keypair.pubkey(), txn
+
+
+def create_account_instructions(balance_needed, mint_keypair, payer, program_id):
+    create_account = sp.create_account(sp.CreateAccountParams(
+                                from_pubkey=payer.pubkey(),
+                                to_pubkey=mint_keypair.pubkey(),
+                                lamports=balance_needed,
+                                space=MINT_LAYOUT.sizeof(),
+                                owner=program_id,
+                                    )
+                                )
+    return create_account
+
+
+def initialize_mint_instructions(mint_keypair, mint_authority, decimals, program_id):
+    int_mint = spl_token.initialize_mint(spl_token.InitializeMintParams(
                     program_id=program_id,
                     mint=mint_keypair.pubkey(),
                     decimals=decimals,
                     mint_authority=mint_authority,
-                )
-            )
-        )
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    txn_id = asyncio.run(execute_tx(txn, payer, mint_keypair, None))
-    return mint_keypair.pubkey()
+                        )
+                    )
+    return int_mint
+
 
 def mint_to_account_instructions(amount, dest, mint, mint_authority, payer):
     params = MintToParams(amount=amount, dest=dest, mint=mint, mint_authority=mint_authority, program_id=TOKEN_PROGRAM_ID)
     return mint_to(params)
 
-def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE):    
-    """1. Create Mint"""
-    print("[INF] CREATE MINT")  
-    mint = create_mint(solana_api_client, payer, payer.pubkey(), mint_decimals, TOKEN_PROGRAM_ID, GAS_PRICE)
-    #mint = mint_token_cli.pubkey
-    print("----- {}".format(mint))
-    
-    """2. Mint to Account
-    2.1 Create Assocciated Token Account instructions"""
-    associated_token_address, associated_token_account_Instructions = get_token_account(solana_api_client, payer.pubkey(), mint)
-    print("[INF] MOTHER WALLET: {}".format(payer.pubkey()))
-    print("[INF] Associated Token Account: {}".format(associated_token_address))
-    
-    """2.2  Mint to account instruction"""
-    mint_to_account_Instructions = mint_to_account_instructions(mint_amount, associated_token_address, mint, payer.pubkey(), payer)
-    
-    """2.3 Mint to account Transaction"""
-    tx = Transaction(fee_payer = payer.pubkey()).add(set_compute_unit_price(GAS_PRICE))
-    signers = [payer]    
-    if associated_token_account_Instructions != None:
-        tx.add(associated_token_account_Instructions)
-    tx.add(mint_to_account_Instructions)
-    print("[INF] MINTING TOKEN..........")
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    txn = asyncio.run(execute_tx(tx, payer, None, signers))
-    return mint
+
+def name_token_instructions(token_name, symbol, uri, token, payer):
+    metadata_account_Instructions = metadata_account_instruction(token_name, symbol, uri, token, payer)
+    return  metadata_account_Instructions
+
 
 def revoke_mint_authority_instructions(mint, current_mint_authority):
     params = SetAuthorityParams(account=mint, authority=AuthorityType.MINT_TOKENS, current_authority=current_mint_authority, program_id=TOKEN_PROGRAM_ID)
     return set_authority(params)
 
-def revoke_mint_authority(mint, payer, GAS_PRICE):
-    tx = Transaction(fee_payer = payer.pubkey()).add(set_compute_unit_price(GAS_PRICE)).add(revoke_mint_authority_instructions(mint, payer.pubkey()))
-    signers = [payer]
-    print("[INF] REVOKE MINT AUTHORITY")
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    txn = asyncio.run(execute_tx(tx, payer, None, signers))
-    return txn
+
+def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE):
+    #Create mint:
+    print("CREATE MINT")
+    mint, tx = create_mint(solana_api_client, payer, payer.pubkey(), mint_decimals, TOKEN_PROGRAM_ID, GAS_PRICE)
+    print("----- {}".format(mint))
+
+    #Mint to Account
+    #Create Associated Token Account Instuction
+    associated_token_address, associated_token_account_Instructions = get_token_account(solana_api_client, payer.pubkey(), mint)
+    print("MOTHER WALLET: {}".format(payer.pubkey()))
+    print("Associated Token Account: {}".format(associated_token_address))
+
+    #Mint to account
+    mint_to_account_Instructions = mint_to_account_instructions(mint_amount, associated_token_address, mint, payer.pubkey(), payer)
+    if associated_token_account_Instructions != None:
+        tx.add(associated_token_account_Instructions)
+    tx.add(mint_to_account_Instructions)
+
+    return mint, tx
 
 def burn_and_close(account, amount, mint, owner):
 	burn_params = BurnParams(account=account, amount=amount, mint=mint, owner=owner.pubkey(), program_id=programid_of_token, signers=[])
@@ -292,6 +276,7 @@ def burn_and_close(account, amount, mint, owner):
 	tx = Transaction(fee_payer=owner.pubkey()).add(burn_ins).add(close_ins)
 	signers = [owner]
 	return tx, signers
+
 
 async def delete_account(account, payer):
 	print(account)
@@ -332,7 +317,6 @@ def make_simulate_pool_info_instruction(accounts, mint, ctx):
 def make_swap_instruction(amount_in: int, token_account_in: Pubkey.from_string, token_account_out: Pubkey.from_string,
                               accounts: dict, mint, ctx, owner) -> Instruction:
         
-        
         tokenPk = mint
         accountProgramId = ctx.get_account_info_json_parsed(tokenPk)
         TOKEN_PROGRAM_ID = accountProgramId.value.owner
@@ -367,6 +351,7 @@ def make_swap_instruction(amount_in: int, token_account_in: Pubkey.from_string, 
         )
         return Instruction(RAY_V4, data, keys)
 
+
 def get_token_account(ctx, 
                       owner: Pubkey.from_string, 
                       mint: Pubkey.from_string):
@@ -378,6 +363,7 @@ def get_token_account(ctx,
         swap_token_account_Instructions = create_associated_token_account(owner, owner, mint)
         return swap_associated_token_address, swap_token_account_Instructions
 
+
 def sell_get_token_account(ctx, 
                       owner: Pubkey.from_string, 
                       mint: Pubkey.from_string):
@@ -387,7 +373,6 @@ def sell_get_token_account(ctx,
     except:
         print("Mint Token Not found")
         return None
-
 
 def fetch_pool_keys(mint):
 	amm_info = getTokens(Pubkey.from_string(mint))
@@ -413,6 +398,8 @@ def fetch_pool_keys(mint):
                     'pool_open_time' : amm_info['openTime']
             }
 
+
+
 def main():
     mint_decimals = config.getint("MINT", "decimals")
     mint_amount = config.getint("MINT", "amount")
@@ -424,9 +411,14 @@ def main():
     payer = get_payer(secret_Key)
     
     print("||===[MINT TOKEN Ver:1.0.0]===||")
-    mint = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE)
-    txn = name_token(token_name, symbol, URI, mint, payer,GAS_PRICE)
-    txn = revoke_mint_authority(mint, payer,GAS_PRICE)
+    signers = [payer]
+    mint, tx = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE)
+    tx.add(name_token_instructions(token_name, symbol, URI, mint, payer))
+    tx.add(revoke_mint_authority_instructions(mint, payer))
+    
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.run(execute_tx(tx, payer, None, signers))
+
     sleep(3600)
     return
     
