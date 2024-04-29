@@ -415,7 +415,7 @@ def main():
     tx.add(name_token_instructions(token_name, symbol, URI, mint, payer))
 
     print("REVOKE MINT AUTHORITY")
-    tx.add(revoke_mint_authority_instructions(mint, payer))
+    tx.add(revoke_mint_authority_instructions(mint, payer.pubkey()))
 
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(execute_tx(tx, payer, None, signers))

@@ -425,8 +425,8 @@ def main():
     
     print("||===[MINT TOKEN Ver:1.0.0]===||")
     mint = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE)
-    txn = name_token(token_name, symbol, URI, mint, payer,GAS_PRICE)
-    txn = revoke_mint_authority(mint, payer,GAS_PRICE)
+    txn = name_token(token_name, symbol, URI, mint, payer, GAS_PRICE)
+    txn = revoke_mint_authority(mint, payer, GAS_PRICE)
     sleep(3600)
     return
     
