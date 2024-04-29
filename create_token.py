@@ -44,7 +44,7 @@ ctx1 = Client(RPC_HTTPS_URL, commitment=Commitment("confirmed"), timeout=30,bloc
 
 secret_Key = config.get("WALLET", "private_key")
     
-#GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
+GAS_LIMIT = config.getint("FEE", "computeUnitLimitRaydium")
 GAS_PRICE = config.getint("FEE", "computeUnitPriceMicroLamports")
 
 
@@ -126,6 +126,7 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
         print(e)
         print("Main Swap error Raydium... retrying...")
 
+
 # structure of the instruction
 instruction_structure = CStruct(
     "instructionDiscriminator" / U8,
@@ -198,11 +199,10 @@ def metadata_account_instruction(token_name, symbol, uri, token, payer):
     return Instruction(TOKEN_METADATA_PROGRAM_ID, instruction_structure.build(data), accounts)
 
 
-def create_mint(solana_client, payer, mint_authority, decimals, program_id, GAS_PRICE):
+def create_mint(solana_client, payer, mint_authority, decimals, program_id, GAS_PRICE, GAS_LIMIT):
     balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(solana_client)
     mint_keypair = Keypair()
-    txn = Transaction(fee_payer=payer.pubkey()).add(set_compute_unit_price(GAS_PRICE))
-    signers=[]
+    txn = Transaction(fee_payer=payer.pubkey()).add(set_compute_unit_price(GAS_PRICE)).add(set_compute_unit_limit(GAS_LIMIT))
     txn.add(create_account_instructions(balance_needed, mint_keypair, payer, program_id))
     txn.add(initialize_mint_instructions(mint_keypair, mint_authority, decimals, program_id))
     return mint_keypair.pubkey(), txn
@@ -246,10 +246,10 @@ def revoke_mint_authority_instructions(mint, current_mint_authority):
     return set_authority(params)
 
 
-def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE):
+def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE, LIMIT):
     #Create mint:
     print("CREATE MINT")
-    mint, tx = create_mint(solana_api_client, payer, payer.pubkey(), mint_decimals, TOKEN_PROGRAM_ID, GAS_PRICE)
+    mint, tx = create_mint(solana_api_client, payer, payer.pubkey(), mint_decimals, TOKEN_PROGRAM_ID, GAS_PRICE, LIMIT)
     print("----- {}".format(mint))
 
     #Mint to Account
@@ -412,10 +412,14 @@ def main():
     
     print("||===[MINT TOKEN Ver:1.0.0]===||")
     signers = [payer]
-    mint, tx = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE)
+    mint, tx = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE, GAS_LIMIT)
+
+    print("CREATE NAME AND LOGO")
     tx.add(name_token_instructions(token_name, symbol, URI, mint, payer))
+
+    print("REVOKE MINT AUTHORITY")
     tx.add(revoke_mint_authority_instructions(mint, payer))
-    
+
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(execute_tx(tx, payer, None, signers))
 
