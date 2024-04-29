@@ -203,32 +203,29 @@ def create_mint(solana_client, payer, mint_authority, decimals, program_id, GAS_
     balance_needed = Token.get_min_balance_rent_for_exempt_for_mint(solana_client)
     mint_keypair = Keypair()
     txn = Transaction(fee_payer=payer.pubkey()).add(set_compute_unit_price(GAS_PRICE)).add(set_compute_unit_limit(GAS_LIMIT))
-    txn.add(create_account_instructions(balance_needed, mint_keypair, payer, program_id))
-    txn.add(initialize_mint_instructions(mint_keypair, mint_authority, decimals, program_id))
-    return mint_keypair.pubkey(), txn
-
-
-def create_account_instructions(balance_needed, mint_keypair, payer, program_id):
-    create_account = sp.create_account(sp.CreateAccountParams(
-                                from_pubkey=payer.pubkey(),
-                                to_pubkey=mint_keypair.pubkey(),
-                                lamports=balance_needed,
-                                space=MINT_LAYOUT.sizeof(),
-                                owner=program_id,
-                                    )
-                                )
-    return create_account
-
-
-def initialize_mint_instructions(mint_keypair, mint_authority, decimals, program_id):
-    int_mint = spl_token.initialize_mint(spl_token.InitializeMintParams(
+    txn.add(
+            sp.create_account(
+                sp.CreateAccountParams(
+                    from_pubkey=payer.pubkey(),
+                    to_pubkey=mint_keypair.pubkey(),
+                    lamports=balance_needed,
+                    space=MINT_LAYOUT.sizeof(),
+                    owner=program_id,
+                )
+            )
+        )
+    txn.add(
+            spl_token.initialize_mint(
+                spl_token.InitializeMintParams(
                     program_id=program_id,
                     mint=mint_keypair.pubkey(),
                     decimals=decimals,
                     mint_authority=mint_authority,
-                        )
-                    )
-    return int_mint
+                )
+            )
+        )
+    return mint_keypair.pubkey(), txn
+
 
 
 def mint_to_account_instructions(amount, dest, mint, mint_authority, payer):
