@@ -224,7 +224,7 @@ def create_mint(solana_client, payer, mint_authority, decimals, program_id, GAS_
                 )
             )
         )
-    return mint_keypair.pubkey(), txn
+    return mint_keypair, txn
 
 
 
@@ -243,25 +243,36 @@ def revoke_mint_authority_instructions(mint, current_mint_authority):
     return set_authority(params)
 
 
-def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE, LIMIT):
+def create_and_mint_to_account(solana_api_client, mint_amount, mint_decimals, payer, GAS_PRICE, LIMIT, token_name, symbol, uri):
     #Create mint:
     print("CREATE MINT")
+    signers = [payer]
+
     mint, tx = create_mint(solana_api_client, payer, payer.pubkey(), mint_decimals, TOKEN_PROGRAM_ID, GAS_PRICE, LIMIT)
-    print("----- {}".format(mint))
+    print("----- {}".format(mint.pubkey()))
 
     #Mint to Account
     #Create Associated Token Account Instuction
-    associated_token_address, associated_token_account_Instructions = get_token_account(solana_api_client, payer.pubkey(), mint)
+    associated_token_address, associated_token_account_Instructions = get_token_account(solana_api_client, payer.pubkey(), mint.pubkey())
     print("MOTHER WALLET: {}".format(payer.pubkey()))
     print("Associated Token Account: {}".format(associated_token_address))
 
     #Mint to account
-    mint_to_account_Instructions = mint_to_account_instructions(mint_amount, associated_token_address, mint, payer.pubkey(), payer)
+    mint_to_account_Instructions = mint_to_account_instructions(mint_amount, associated_token_address, mint.pubkey(), payer.pubkey(), payer)
     if associated_token_account_Instructions != None:
         tx.add(associated_token_account_Instructions)
     tx.add(mint_to_account_Instructions)
 
-    return mint, tx
+    print("CREATE NAME AND LOGO")
+    tx.add(name_token_instructions(token_name, symbol, uri, mint.pubkey(), payer))
+
+    print("REVOKE MINT AUTHORITY")
+    tx.add(revoke_mint_authority_instructions(mint.pubkey(), payer.pubkey()))
+
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.run(execute_tx(tx, payer, mint, signers))
+
+    return tx
 
 def burn_and_close(account, amount, mint, owner):
 	burn_params = BurnParams(account=account, amount=amount, mint=mint, owner=owner.pubkey(), program_id=programid_of_token, signers=[])
@@ -408,17 +419,7 @@ def main():
     payer = get_payer(secret_Key)
     
     print("||===[MINT TOKEN Ver:1.0.0]===||")
-    signers = [payer]
-    mint, tx = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE, GAS_LIMIT)
-
-    print("CREATE NAME AND LOGO")
-    tx.add(name_token_instructions(token_name, symbol, URI, mint, payer))
-
-    print("REVOKE MINT AUTHORITY")
-    tx.add(revoke_mint_authority_instructions(mint, payer.pubkey()))
-
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(execute_tx(tx, payer, None, signers))
+    tx = create_and_mint_to_account(solana_client, mint_amount, mint_decimals, payer, GAS_PRICE, GAS_LIMIT, token_name, symbol, URI)
 
     sleep(3600)
     return
