@@ -83,8 +83,8 @@ async def execute_tx(swap_tx, payer, Wsol_account_keyPair, signers):
                             finish_time = time()
                             execution_time = time() - start_time
                             print("[INF] THÀNH CÔNG                    | {} |\n[INF] TX : {}".format(datetime.datetime.now(),txn.value))
-                            print(f"Transaction link (for devnet):  https://solscan.io/tx/{txn.value}?cluster=devnet")
-                            print(f"Or link:  https://explorer.solana.com/tx/{txn.value}")
+                            print(f"Transaction link (for devnet):  https://solscan.io/tx/{txn.value}")
+                            print(f"Or link:  https://explorer.solana.com/tx/{txn.value}?cluster=devnet")
                             print("[INF] Thời Gian Node Nhận Lệnh    : {} giây".format(node_proc_time - start_time))
                             print("[INF] Thời Gian Mạng Lưới Xác Thực: {} giây".format(finish_time - node_proc_time))
                             print("[INF] Tổng Thời Gian Thực Thi     : {} giây".format(finish_time - start_time))
