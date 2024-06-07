@@ -3,4 +3,5 @@ bot_session.session
 anon.session
 js version/
 active_pool/
-config.ini
+.ini
+_pychache_
